@@ -1,0 +1,69 @@
+@page "/horses/create"
+@rendermode InteractiveServer
+@inject IHorseServiceKhoiND Service
+@inject IOwnerServiceKhoiND OwnerService
+@inject HorseHubNotifier Notifier
+@inject NavigationManager Nav
+
+<PageTitle>New horse - HorseClub</PageTitle>
+
+<h1>New horse</h1>
+<hr />
+
+<EditForm Model="_horse" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    @if (_error != null)
+    {
+        <div class="alert alert-danger" role="alert">@_error</div>
+    }
+
+    <HorseForm Horse="_horse" Owners="_owners" Others="_others" />
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary" disabled="@_saving">Create</button>
+        <a href="horses" class="btn btn-outline-secondary">Back to list</a>
+    </div>
+</EditForm>
+
+@code {
+    private readonly Horse _horse = new() { BirthDate = DateOnly.FromDateTime(DateTime.Today) };
+    private List<Owner> _owners = new();
+    private List<Horse> _others = new();
+    private string? _error;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _owners = await OwnerService.GetAllAsync();
+            _others = await Service.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.GetBaseException().Message;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            // Id and CreatedAt stay at their defaults so SQL Server fills them.
+            await Service.CreateAsync(_horse);
+            await Notifier.BroadcastAsync($"Horse \"{_horse.Name}\" was created.");
+            Nav.NavigateTo("horses");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.GetBaseException().Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

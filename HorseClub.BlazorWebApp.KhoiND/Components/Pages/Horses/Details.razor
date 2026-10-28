@@ -1,0 +1,47 @@
+@page "/horses/details/{Id:guid}"
+@inject IHorseServiceKhoiND Service
+
+<PageTitle>Horse details - HorseClub</PageTitle>
+
+@if (_error != null)
+{
+    <div class="alert alert-danger" role="alert">@_error</div>
+}
+else if (_horse == null)
+{
+    <h1>Horse details</h1>
+    <div class="alert alert-warning">Horse not found.</div>
+    <a href="horses" class="btn btn-outline-secondary">Back to list</a>
+}
+else
+{
+    <h1>@_horse.Name</h1>
+    <hr />
+
+    <HorseDetails Horse="_horse" />
+
+    <div class="d-flex gap-2">
+        <a href="horses/edit/@_horse.Id" class="btn btn-primary">Edit</a>
+        <a href="horses" class="btn btn-outline-secondary">Back to list</a>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private Horse? _horse;
+    private string? _error;
+
+    // Read-only page: rendered on the server (static SSR), no circuit needed.
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _horse = await Service.GetByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.GetBaseException().Message;
+        }
+    }
+}

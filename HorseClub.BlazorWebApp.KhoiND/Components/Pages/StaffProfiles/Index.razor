@@ -1,0 +1,50 @@
+@page "/staff"
+@inject IStaffProfileServiceKhoiND Service
+
+<PageTitle>Staff - HorseClub</PageTitle>
+
+<h1 class="mb-3">Staff</h1>
+
+@if (_items.Count == 0)
+{
+    <div class="alert alert-info">No staff found.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Full name</th>
+                    <th>Phone</th>
+                    <th>Job title</th>
+                    <th>Hire date</th>
+                    <th>Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in _items)
+                {
+                    <tr @key="item.Id">
+                        <td>@item.FullName</td>
+                        <td>@item.Phone</td>
+                        <td>@((StaffJobTitle)item.JobTitle)</td>
+                        <td>@item.HireDate?.ToString("yyyy-MM-dd")</td>
+                        <td>@(item.IsActive ? "Yes" : "No")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted small">@_items.Count staff member(s)</p>
+}
+
+@code {
+    // Read-only list, rendered on the server (no interactivity needed).
+    private List<StaffProfile> _items = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _items = await Service.GetAllAsync();
+    }
+}

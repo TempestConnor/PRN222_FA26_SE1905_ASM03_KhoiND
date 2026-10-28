@@ -1,0 +1,96 @@
+@page "/horses/edit/{Id:guid}"
+@rendermode InteractiveServer
+@inject IHorseServiceKhoiND Service
+@inject IOwnerServiceKhoiND OwnerService
+@inject HorseHubNotifier Notifier
+@inject NavigationManager Nav
+
+<PageTitle>Edit horse - HorseClub</PageTitle>
+
+<h1>Edit horse</h1>
+<hr />
+
+@if (_error != null)
+{
+    <div class="alert alert-danger" role="alert">@_error</div>
+}
+
+@if (_loading)
+{
+    <p class="text-muted">Loading...</p>
+}
+else if (_horse == null)
+{
+    <div class="alert alert-warning">Horse not found.</div>
+    <a href="horses" class="btn btn-outline-secondary">Back to list</a>
+}
+else
+{
+    @* The component keeps the loaded entity, so columns the form doesn't show
+       (CreatedAt, CreatedBy) are saved unchanged; no hidden inputs are needed. *@
+    <EditForm Model="_horse" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+
+        <HorseForm Horse="_horse" Owners="_owners" Others="_others" />
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary" disabled="@_saving">Save</button>
+            <a href="horses" class="btn btn-outline-secondary">Back to list</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private Horse? _horse;
+    private List<Owner> _owners = new();
+    private List<Horse> _others = new();
+    private string? _error;
+    private bool _loading = true;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _horse = await Service.GetByIdAsync(Id);
+            _owners = await OwnerService.GetAllAsync();
+            _others = (await Service.GetAllAsync()).Where(h => h.Id != Id).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.GetBaseException().Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_horse == null) return;
+
+        _saving = true;
+        _error = null;
+        try
+        {
+            // Don't let EF touch the related rows.
+            _horse.Owner = null;
+            _horse.Sire = null;
+            _horse.Dam = null;
+            await Service.UpdateAsync(_horse);
+            await Notifier.BroadcastAsync($"Horse \"{_horse.Name}\" was updated.");
+            Nav.NavigateTo("horses");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.GetBaseException().Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

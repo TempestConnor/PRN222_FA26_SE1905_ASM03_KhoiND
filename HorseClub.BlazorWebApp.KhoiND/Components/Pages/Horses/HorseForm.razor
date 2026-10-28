@@ -1,0 +1,102 @@
+@* Shared fields for Create and Edit. The page owns the EditForm (and its validator);
+   this component only renders the inputs bound to that form's model. *@
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label for="name" class="form-label">Name *</label>
+        <InputText id="name" @bind-Value="Horse.Name" class="form-control" maxlength="150" />
+        <ValidationMessage For="() => Horse.Name" />
+    </div>
+    <div class="col-md-6">
+        <label for="owner" class="form-label">Owner *</label>
+        <InputSelect id="owner" @bind-Value="Horse.OwnerId" class="form-select">
+            <option value="@Guid.Empty">-- Select owner --</option>
+            @foreach (var owner in Owners)
+            {
+                <option value="@owner.Id">@owner.FullName</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => Horse.OwnerId" />
+    </div>
+
+    <div class="col-md-6">
+        <label for="microchip" class="form-label">Microchip No *</label>
+        <InputText id="microchip" @bind-Value="Horse.MicrochipNo" class="form-control" maxlength="30" />
+        <ValidationMessage For="() => Horse.MicrochipNo" />
+    </div>
+    <div class="col-md-6">
+        <label for="passport" class="form-label">Passport No</label>
+        <InputText id="passport" @bind-Value="Horse.PassportNo" class="form-control" maxlength="50" />
+        <ValidationMessage For="() => Horse.PassportNo" />
+    </div>
+
+    <div class="col-md-4">
+        <label for="sex" class="form-label">Sex *</label>
+        <InputSelect id="sex" @bind-Value="Horse.Sex" class="form-select">
+            @foreach (var sex in Enum.GetValues<HorseSex>())
+            {
+                <option value="@((byte)sex)">@sex</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => Horse.Sex" />
+    </div>
+    <div class="col-md-4">
+        <label for="birthdate" class="form-label">Birth date *</label>
+        <InputDate id="birthdate" @bind-Value="Horse.BirthDate" class="form-control" />
+        <ValidationMessage For="() => Horse.BirthDate" />
+    </div>
+    <div class="col-md-4">
+        <label for="status" class="form-label">Status *</label>
+        <InputSelect id="status" @bind-Value="Horse.Status" class="form-select">
+            @foreach (var status in Enum.GetValues<HorseStatus>())
+            {
+                <option value="@((byte)status)">@status</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => Horse.Status" />
+    </div>
+
+    <div class="col-md-6">
+        <label for="breed" class="form-label">Breed</label>
+        <InputText id="breed" @bind-Value="Horse.Breed" class="form-control" maxlength="100" />
+        <ValidationMessage For="() => Horse.Breed" />
+    </div>
+    <div class="col-md-6">
+        <label for="color" class="form-label">Color</label>
+        <InputText id="color" @bind-Value="Horse.Color" class="form-control" maxlength="50" />
+        <ValidationMessage For="() => Horse.Color" />
+    </div>
+
+    @* A horse can't be its own parent; sires are male, dams are mares. *@
+    <div class="col-md-6">
+        <label for="sire" class="form-label">Sire (father)</label>
+        <InputSelect id="sire" @bind-Value="Horse.SireId" class="form-select">
+            <option value="">-- None / unknown --</option>
+            @foreach (var h in Others.Where(h => h.Sex != (byte)HorseSex.Mare))
+            {
+                <option value="@h.Id">@h.Name</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => Horse.SireId" />
+    </div>
+    <div class="col-md-6">
+        <label for="dam" class="form-label">Dam (mother)</label>
+        <InputSelect id="dam" @bind-Value="Horse.DamId" class="form-select">
+            <option value="">-- None / unknown --</option>
+            @foreach (var h in Others.Where(h => h.Sex == (byte)HorseSex.Mare))
+            {
+                <option value="@h.Id">@h.Name</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => Horse.DamId" />
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Horse Horse { get; set; } = default!;
+
+    [Parameter, EditorRequired] public List<Owner> Owners { get; set; } = new();
+
+    // Every other (non-deleted) horse, used for the sire and dam dropdowns.
+    [Parameter, EditorRequired] public List<Horse> Others { get; set; } = new();
+}

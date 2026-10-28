@@ -1,0 +1,42 @@
+@* Glider tabs from Uiverse.io (see wwwroot/css/tabs.css). Each radio carries its page URL;
+   picking one slides the glider and then loads that page with Blazor's enhanced navigation.
+   The layout is rendered on the server, so the checked tab is recomputed on every navigation. *@
+@inject NavigationManager Nav
+
+<div class="tabs-container">
+    <div class="tabs">
+        @for (var i = 0; i < _tabs.Length; i++)
+        {
+            var id = $"tab-radio-{i + 1}";
+            <input type="radio" id="@id" name="tabs" autocomplete="off"
+                   value="@_tabs[i].Route"
+                   checked="@(CurrentRoute == _tabs[i].Route)"
+                   onchange="Blazor.navigateTo(this.value)">
+            <label class="tab" for="@id">@_tabs[i].Label</label>
+        }
+        <span class="glider"></span>
+    </div>
+</div>
+
+@code {
+    private static readonly (string Route, string Label)[] _tabs =
+    {
+        ("horses", "Horses"),
+        ("owners", "Owners"),
+        ("staff", "Staff"),
+        ("suppliers", "Suppliers"),
+        ("supply-categories", "Categories"),
+        ("supply-items", "Supply items")
+    };
+
+    // "horses/edit/..." -> "horses"; the site root is the horse list.
+    private string CurrentRoute
+    {
+        get
+        {
+            var path = Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0];
+            var first = path.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            return string.IsNullOrEmpty(first) ? "horses" : first.ToLowerInvariant();
+        }
+    }
+}

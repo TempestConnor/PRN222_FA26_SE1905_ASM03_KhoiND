@@ -1,0 +1,83 @@
+@page "/horses/delete/{Id:guid}"
+@rendermode InteractiveServer
+@inject IHorseServiceKhoiND Service
+@inject HorseHubNotifier Notifier
+@inject NavigationManager Nav
+
+<PageTitle>Delete horse - HorseClub</PageTitle>
+
+<h1>Delete horse</h1>
+
+@if (_error != null)
+{
+    <div class="alert alert-danger" role="alert">@_error</div>
+}
+
+@if (_loading)
+{
+    <p class="text-muted">Loading...</p>
+}
+else if (_horse == null)
+{
+    <div class="alert alert-warning">Horse not found.</div>
+    <a href="horses" class="btn btn-outline-secondary">Back to list</a>
+}
+else
+{
+    <p class="lead">Are you sure you want to delete <strong>@_horse.Name</strong>?</p>
+    <hr />
+
+    <HorseDetails Horse="_horse" />
+
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-danger" disabled="@_deleting" @onclick="DeleteAsync">Delete</button>
+        <a href="horses" class="btn btn-outline-secondary">Back to list</a>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private Horse? _horse;
+    private string? _error;
+    private bool _loading = true;
+    private bool _deleting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _horse = await Service.GetByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.GetBaseException().Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_horse == null) return;
+
+        _deleting = true;
+        _error = null;
+        try
+        {
+            await Service.DeleteAsync(Id);
+            await Notifier.BroadcastAsync($"Horse \"{_horse.Name}\" was deleted.");
+            Nav.NavigateTo("horses");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.GetBaseException().Message;
+        }
+        finally
+        {
+            _deleting = false;
+        }
+    }
+}
