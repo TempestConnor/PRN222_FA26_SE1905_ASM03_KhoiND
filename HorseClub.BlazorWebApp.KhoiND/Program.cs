@@ -1,5 +1,4 @@
 using HorseClub.BlazorWebApp.KhoiND.Components;
-using HorseClub.BlazorWebApp.KhoiND.Services;
 using HorseClub.Services.KhoiND;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +14,6 @@ builder.Services.AddTransient<IStaffProfileServiceKhoiND, StaffProfileServiceKho
 builder.Services.AddTransient<ISupplierServiceKhoiND, SupplierServiceKhoiND>();
 builder.Services.AddTransient<ISupplyCategoryServiceKhoiND, SupplyCategoryServiceKhoiND>();
 builder.Services.AddTransient<ISupplyItemServiceKhoiND, SupplyItemServiceKhoiND>();
-builder.Services.AddSingleton<HorseHubNotifier>();
 
 var app = builder.Build();
 

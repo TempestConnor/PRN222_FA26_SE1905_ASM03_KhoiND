@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @inject IHorseServiceKhoiND Service
 @inject IOwnerServiceKhoiND OwnerService
-@inject HorseHubNotifier Notifier
 @inject NavigationManager Nav
 
 <PageTitle>New horse - HorseClub</PageTitle>
@@ -54,7 +53,6 @@
         {
             // Id and CreatedAt stay at their defaults so SQL Server fills them.
             await Service.CreateAsync(_horse);
-            await Notifier.BroadcastAsync($"Horse \"{_horse.Name}\" was created.");
             Nav.NavigateTo("horses");
         }
         catch (Exception ex)

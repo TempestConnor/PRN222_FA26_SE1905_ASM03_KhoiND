@@ -1,7 +1,6 @@
 @page "/horses/delete/{Id:guid}"
 @rendermode InteractiveServer
 @inject IHorseServiceKhoiND Service
-@inject HorseHubNotifier Notifier
 @inject NavigationManager Nav
 
 <PageTitle>Delete horse - HorseClub</PageTitle>
@@ -68,7 +67,6 @@ else
         try
         {
             await Service.DeleteAsync(Id);
-            await Notifier.BroadcastAsync($"Horse \"{_horse.Name}\" was deleted.");
             Nav.NavigateTo("horses");
         }
         catch (Exception ex)

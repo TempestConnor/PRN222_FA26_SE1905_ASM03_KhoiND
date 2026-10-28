@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @inject IHorseServiceKhoiND Service
 @inject IOwnerServiceKhoiND OwnerService
-@inject HorseHubNotifier Notifier
 @inject NavigationManager Nav
 
 <PageTitle>Edit horse - HorseClub</PageTitle>
@@ -81,7 +80,6 @@ else
             _horse.Sire = null;
             _horse.Dam = null;
             await Service.UpdateAsync(_horse);
-            await Notifier.BroadcastAsync($"Horse \"{_horse.Name}\" was updated.");
             Nav.NavigateTo("horses");
         }
         catch (Exception ex)

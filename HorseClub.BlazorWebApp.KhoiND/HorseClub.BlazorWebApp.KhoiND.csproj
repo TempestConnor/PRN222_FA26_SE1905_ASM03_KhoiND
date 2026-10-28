@@ -5,10 +5,6 @@
     <ProjectReference Include="..\HorseClub.Entities.KhoiND\HorseClub.Entities.KhoiND.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.13" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

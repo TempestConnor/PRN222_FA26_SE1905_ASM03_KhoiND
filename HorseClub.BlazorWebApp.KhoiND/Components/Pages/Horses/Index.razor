@@ -1,11 +1,8 @@
 @page "/"
 @page "/horses"
 @rendermode InteractiveServer
-@implements IAsyncDisposable
 @inject IHorseServiceKhoiND Service
-@inject IConfiguration Config
 @inject NavigationManager Nav
-@inject ILogger<Index> Log
 
 <PageTitle>Horses - HorseClub</PageTitle>
 
@@ -89,20 +86,6 @@ else
     <p class="text-muted small">@_horses.Count horse(s)</p>
 }
 
-@* Filled when the hub pushes a change or notification. *@
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-    @foreach (var toast in _toasts)
-    {
-        <div @key="toast" class="toast show align-items-center text-bg-dark border-0" role="status">
-            <div class="d-flex">
-                <div class="toast-body">@toast.Message</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Close"
-                        @onclick="() => _toasts.Remove(toast)"></button>
-            </div>
-        </div>
-    }
-</div>
-
 @code {
     // GET: /horses?name=..&breed=..&ownerName=..
     [SupplyParameterFromQuery] public string? Name { get; set; }
@@ -112,10 +95,6 @@ else
     private string? _name, _breed, _ownerName;
     private List<Horse>? _horses;
     private string? _error;
-    private HubConnection? _hub;
-    private readonly List<Toast> _toasts = new();
-
-    private record Toast(string Message);
 
     // Runs on first load and whenever the query string changes (Search / Clear).
     protected override async Task OnParametersSetAsync()
@@ -124,30 +103,6 @@ else
         _breed = Breed;
         _ownerName = OwnerName;
         await LoadAsync();
-    }
-
-    // The hub is opened only once the circuit is interactive, never during prerendering.
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-
-        var hubUrl = Config["HubUrl"];
-        if (string.IsNullOrWhiteSpace(hubUrl)) return;          // standalone mode
-
-        _hub = new HubConnectionBuilder().WithUrl(hubUrl).WithAutomaticReconnect().Build();
-        _hub.On<string, HorseDto>(HubContract.ItemChanged, async (action, dto) =>
-            await InvokeAsync(() => OnHubMessageAsync($"Horse \"{dto.Name}\" was {action}.")));
-        _hub.On<string>(HubContract.Notification, async message =>
-            await InvokeAsync(() => OnHubMessageAsync(message)));
-
-        try
-        {
-            await _hub.StartAsync();
-        }
-        catch (Exception ex)
-        {
-            Log.LogWarning(ex, "Hub not reachable at {HubUrl}; live updates are off", hubUrl);
-        }
     }
 
     private async Task LoadAsync()
@@ -164,18 +119,6 @@ else
         }
     }
 
-    // Always runs on the renderer's sync context (see InvokeAsync above).
-    private async Task OnHubMessageAsync(string message)
-    {
-        await LoadAsync();
-        var toast = new Toast(message);
-        _toasts.Add(toast);
-        StateHasChanged();
-
-        await Task.Delay(TimeSpan.FromSeconds(4));
-        if (_toasts.Remove(toast)) StateHasChanged();
-    }
-
     private void Search() => Navigate(_name, _breed, _ownerName);
 
     private void Clear() => Navigate(null, null, null);
@@ -188,10 +131,5 @@ else
             ["breed"] = string.IsNullOrWhiteSpace(breed) ? null : breed,
             ["ownerName"] = string.IsNullOrWhiteSpace(ownerName) ? null : ownerName
         }));
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_hub is not null) await _hub.DisposeAsync();
     }
 }
